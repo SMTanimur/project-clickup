@@ -22,7 +22,10 @@ export default function NewWorkspacePage() {
       <Card className='max-w-md'>
         <NewWorkspaceForm
           onSubmit={data => {
-            const workspace = createWorkspace(data, currentUser);
+            const workspace = createWorkspace({
+              ...data,
+              description: data.description || '' // Ensure description is always a string
+            }, currentUser);
             router.push(`/${workspace.id}`);
           }}
         />

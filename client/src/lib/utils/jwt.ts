@@ -1,7 +1,3 @@
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || 'your-secret-key';
-
 export interface JWTPayload {
   userId: string;
   email: string;
@@ -9,12 +5,13 @@ export interface JWTPayload {
 }
 
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  // Simple base64 encoding for client-side token
+  return btoa(JSON.stringify(payload));
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return JSON.parse(atob(token)) as JWTPayload;
   } catch {
     return null;
   }

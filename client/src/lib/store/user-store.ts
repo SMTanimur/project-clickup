@@ -1,18 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateToken } from '@/lib/utils/jwt';
-import { setCookie, deleteCookie} from 'cookies-next';
+import { setCookie, deleteCookie } from 'cookies-next';
+import { nanoid } from 'nanoid';
 
 export interface User {
   id: string;
   email: string;
   name: string;
+  password: string;
   avatar?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 interface UserState {
+  users: User[];
   currentUser: User | null;
   setCurrentUser: (user: User) => void;
   clearCurrentUser: () => void;
@@ -28,16 +31,36 @@ interface SignupData {
 }
 
 const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
   maxAge: 60 * 60 * 24 * 7, // 7 days
   path: '/',
+  domain: process.env.NODE_ENV === 'production' ? 'your-domain.com' : undefined,
+};
+
+const setCookieWithOptions = (token: string) => {
+  console.log({COOKIE_OPTIONS:token})
+  // First try with all options
+  try {
+    setCookie('clickup_session', token );
+  } catch (error) {
+    // If that fails, try with minimal options
+    console.error('Failed to set cookie with full options:', error);
+    try {
+      setCookie('clickup_session', token, {
+        path: '/',
+        sameSite: 'lax',
+      });
+    } catch (error) {
+      console.error('Failed to set cookie with minimal options:', error);
+    }
+  }
 };
 
 export const useUserStore = create<UserState>()(
-  persist(
-    set => ({
+  persist<UserState>(
+    (set, get) => ({
+      users: [] as User[],
       currentUser: null,
       setCurrentUser: user => {
         set({ currentUser: user });
@@ -46,63 +69,64 @@ export const useUserStore = create<UserState>()(
           email: user.email,
           name: user.name,
         });
-        setCookie('clickup_session', token, COOKIE_OPTIONS);
+        setCookieWithOptions(token);
       },
       clearCurrentUser: () => {
         set({ currentUser: null });
-        deleteCookie('clickup_session', COOKIE_OPTIONS);
+        try {
+          deleteCookie('clickup_session', COOKIE_OPTIONS);
+        } catch (error) {
+          console.error('Failed to delete cookie:', error);
+        }
       },
       login: async (email, password) => {
-        try {
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
+        const user = get().users.find(
+          user => user.email === email && user.password === password
+        );
+        if (!user) throw new Error('Invalid credentials');
 
-          if (!response.ok) throw new Error('Login failed');
-
-          const user = await response.json();
-          set({ currentUser: user });
-
-          const token = generateToken({
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-          });
-          setCookie('clickup_session', token, COOKIE_OPTIONS);
-        } catch (error) {
-          console.error('Login error:', error);
-          throw error;
-        }
+        set({ currentUser: user });
+        const token = generateToken({
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+        });
+        console.log({ token });
+        setCookieWithOptions(token);
       },
       signup: async data => {
-        try {
-          const response = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
-
-          if (!response.ok) throw new Error('Signup failed');
-
-          const user = await response.json();
-          set({ currentUser: user });
-
-          const token = generateToken({
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-          });
-          setCookie('clickup_session', token, COOKIE_OPTIONS);
-        } catch (error) {
-          console.error('Signup error:', error);
-          throw error;
+        const users = get().users;
+        if (users.find(user => user.email === data.email)) {
+          throw new Error('User already exists');
         }
+
+        const newUser = {
+          id: nanoid(),
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        set(state => ({
+          users: [...state.users, newUser],
+          currentUser: newUser,
+        }));
+
+        const token = generateToken({
+          userId: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+        });
+        console.log({ token });
+        setCookieWithOptions(token);
       },
       logout: () => {
         set({ currentUser: null });
-        deleteCookie('clickup_session', COOKIE_OPTIONS);
+        try {
+          deleteCookie('clickup_session', COOKIE_OPTIONS);
+        } catch (error) {
+          console.error('Failed to delete cookie:', error);
+        }
       },
     }),
     {
