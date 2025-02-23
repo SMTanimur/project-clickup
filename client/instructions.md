@@ -1,55 +1,114 @@
+Home page should landing page
 
+# Project Requirements & Design Guidelines
 
-📌 Core Features for Project Planner
-1️⃣ Project Management
-✅ Collaborative Editing – Enable team collaboration with real-time updates.
+## 1. Core Features
 
-2️⃣ Roadmap & Workflow Builder (ReactFlow Integration)
-✅ Visual Roadmap – Drag & drop tasks and milestones to create a visual representation of the project.
-✅ Task Dependencies – Connect tasks using edges to show dependencies.
-✅ Custom Nodes & Edges – Create different types of nodes (Task, Milestone, Decision Point, etc.).
-✅ Auto Layout with ELK.js – Automatically structure the roadmap for clarity.
+### Workspaces & Projects
+- Create, edit, delete workspaces
+- Invite team members
+- Manage multiple projects
+- Workspace color themes and customization
 
-3️⃣ Task & Milestone Management
-✅ Task Creation & Assignment – Assign tasks to team members with due dates.
-✅ Task Status Tracking – (To-Do, In Progress, Completed, Blocked).
-✅ Task Priority – High, Medium, Low priorities with color coding.
-✅ Subtasks & Checklists – Break tasks into smaller steps.
-✅ Recurring Tasks – Set tasks to repeat (daily, weekly, monthly).
+### Task Management
+- Kanban board view with smooth animations
+- Create, edit, delete tasks
+- Task statuses (To Do, In Progress, Done)
+- Assign users, due dates, and priorities
+- Subtasks & dependencies
+- Task templates
 
-4️⃣ Team & Collaboration
-✅ User Roles & Permissions – Admin, Manager, Team Member with different access levels.
-✅ Real-time Collaboration – Multiple users can edit the roadmap simultaneously.
-✅ Comments & Notes – Add comments and discuss tasks directly in the roadmap.
-✅ File Attachments – Upload documents, images, and files for each task.
+### Comments & Collaboration
+- Real-time comments on tasks
+- Mention users (@username) with popup suggestions
+- Rich text editor with markdown support
+- Attach files & images with drag-and-drop
+- Emoji reactions
 
-5️⃣ Project State Management (Zustand)
-✅ Persistent State Storage – Save the entire project structure in Zustand for quick access.
-✅ Sync with Backend – Sync project data with a database for multi-device access.
-✅ Offline Mode – Work on projects without internet, sync changes when online.
+## 2. UI/UX Enhancements
 
-6️⃣ Forms & Validation (React Hook Form + Zod)
-✅ Project Form – Form to create/update project details.
-✅ Task Form – Dynamic form to add/edit tasks with validation.
-✅ User Form – Manage user details, roles, and team assignments.
+### Magic UI Elements
+- Fluid animations for all interactions
+- Skeleton loading states
+- Hover previews for tasks and users
+- Micro-interactions (button clicks, transitions)
+- Toast notifications with progress bars
+- Confetti effects for task completion
 
-7️⃣ UI & UX (ShadCN )
-I have already install tailwindcss shadcn ui and reactflow @xyflow/react
-✅ Dark Mode & Theme Customization
-✅ Sidebar Navigation for Easy Access
-✅ Minimal & Modern UI with ShadCN Components
-✅ Drag & Drop Task Sorting
+### Navigation & Layout
+- Collapsible sidebar with smooth transitions
+- Quick command palette (CMD/CTRL + K)
+- Breadcrumb navigation with dropdown menus
+- Responsive design for all screen sizes
+- Infinite scroll with virtual lists
 
-8️⃣ Performance Optimization (Bun & Lodash)
-✅ Faster Load Times – Use Bun for a highly optimized runtime.
-✅ Efficient State Management – Debounce input handling with Lodash.
-✅ Optimized API Calls – Reduce unnecessary re-renders and requests.
+### Task Board Enhancements
+- Drag & drop tasks with React Beautiful DND
+- Column resizing and reordering
+- Compact vs comfortable view modes
+- Group by assignee, priority, or custom fields
+- Swimlanes for better organization
 
-📌 Tech Stack & Folder Structure
-🔹 Tech Stack
-Frontend: Next.js 15, React, ReactFlow, Zustand, React Hook Form, 
-State Management: Zustand
-Validation: React Hook Form + Zod
-Backend (Optional): Next.js API routes, Prisma, PostgreSQL/MongoDB
-Styling: TailwindCSS, ShadCN
-Build & Performance: Bun
+### Visual Design
+- Dark/Light mode toggle with smooth transition
+- Custom color themes per workspace
+- Modern glassmorphism effects
+- Subtle shadows and depth
+- Consistent spacing and typography
+- Loading spinners and progress indicators
+
+## 3. Search & Filters
+
+### Advanced Search
+- Full-text search across all content
+- Search suggestions and recent searches
+- Filter by multiple criteria
+- Save custom filters
+- Advanced query syntax support
+
+### Filter Options
+- By assignee, status, priority
+- By due date ranges
+- By custom fields
+- By tags and labels
+- Combined filters with AND/OR logic
+
+## 4. Notifications & Updates
+
+### Notification System
+- In-app notifications with badge counts
+- Email notifications (customizable)
+- Desktop notifications
+- Notification preferences per workspace
+- Activity feed with filters
+
+### Real-time Updates
+- Live updates for task changes
+- Presence indicators
+- Collaborative editing indicators
+- Connection status indicator
+- Sync status with offline support
+
+## 5. Performance & Technical
+
+### Optimization
+- Lazy loading of components
+- Image optimization and caching
+- State management with Zustand
+- Debounced search and filters
+- Virtualized lists for large datasets
+
+### Accessibility
+- ARIA labels and roles
+- Keyboard navigation
+- High contrast mode
+- Screen reader support
+- Focus management
+
+## 6. Future Enhancements
+- Time tracking integration
+- Calendar view with drag-drop
+- Gantt chart visualization
+- Resource management
+- Custom workflows
+- API integrations

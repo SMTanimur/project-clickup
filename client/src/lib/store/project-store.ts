@@ -42,8 +42,25 @@ export interface ChecklistItem {
 export interface CustomField {
   id: string;
   name: string;
-  type: 'text' | 'number' | 'date' | 'select' | 'user';
-  value: string | number | Date | { id: string; label: string } | string[];
+  type:
+    | 'text'
+    | 'number'
+    | 'date'
+    | 'select'
+    | 'user'
+    | 'theme'
+    | 'viewMode'
+    | 'notifications';
+  value:
+    | string
+    | number
+    | Date
+    | { id: string; label: string }
+    | string[]
+    | { primary: string; background: string; accent: string }
+    | 'compact'
+    | 'comfortable'
+    | { email: boolean; desktop: boolean; inApp: boolean };
 }
 
 export interface Task {
@@ -67,6 +84,7 @@ export interface Task {
   timeSpent?: number; // in minutes
   dependencies: string[]; // task IDs that this task depends on
   attachments: string[]; // URLs to attached files
+  settings: ProjectSettings;
 }
 
 export interface List {
@@ -95,6 +113,37 @@ export interface Workspace {
   members: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type ProjectTemplate = 'agile' | 'waterfall' | 'custom';
+
+export interface ProjectTheme {
+  primary: string;
+  background: string;
+  accent: string;
+}
+
+export interface ProjectSettings {
+  theme: ProjectTheme;
+  viewMode: 'compact' | 'comfortable';
+  notifications: {
+    email: boolean;
+    desktop: boolean;
+    inApp: boolean;
+  };
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  template: ProjectTemplate;
+  createdAt: Date;
+  updatedAt: Date;
+  teamMembers: string[]; // User IDs
+  status: 'active' | 'completed' | 'archived';
+  settings: ProjectSettings;
+  customFields: CustomField[];
 }
 
 interface AppState {
@@ -168,6 +217,18 @@ interface AppState {
   updateTimeTracking: (taskId: string, timeSpent: number) => void;
   addDependency: (taskId: string, dependencyId: string) => void;
   addAttachment: (taskId: string, attachmentUrl: string) => void;
+
+  // Theme actions
+  updateProjectTheme: (projectId: string, theme: ProjectTheme) => void;
+
+  // View mode actions
+  toggleViewMode: (projectId: string) => void;
+
+  // Notification settings
+  updateNotificationSettings: (
+    projectId: string,
+    settings: Partial<ProjectSettings['notifications']>
+  ) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -355,6 +416,19 @@ export const useStore = create<AppState>()(
                           id: crypto.randomUUID(),
                           createdAt: new Date(),
                           updatedAt: new Date(),
+                          settings: {
+                            theme: {
+                              primary: '#000000',
+                              background: '#ffffff',
+                              accent: '#f3f4f6',
+                            },
+                            viewMode: 'comfortable',
+                            notifications: {
+                              email: true,
+                              desktop: true,
+                              inApp: true,
+                            },
+                          },
                         },
                       ],
                     }
@@ -598,6 +672,87 @@ export const useStore = create<AppState>()(
                     ? {
                         ...t,
                         attachments: [...(t.attachments || []), attachmentUrl],
+                      }
+                    : t
+                ),
+              })),
+            })),
+          })),
+        })),
+
+      // Theme actions
+      updateProjectTheme: (projectId, theme) =>
+        set(state => ({
+          workspaces: state.workspaces.map(w => ({
+            ...w,
+            spaces: w.spaces.map(s => ({
+              ...s,
+              lists: s.lists.map(l => ({
+                ...l,
+                tasks: l.tasks.map(t =>
+                  t.id === projectId
+                    ? {
+                        ...t,
+                        settings: {
+                          ...t.settings,
+                          theme,
+                        },
+                      }
+                    : t
+                ),
+              })),
+            })),
+          })),
+        })),
+
+      // View mode actions
+      toggleViewMode: projectId =>
+        set(state => ({
+          workspaces: state.workspaces.map(w => ({
+            ...w,
+            spaces: w.spaces.map(s => ({
+              ...s,
+              lists: s.lists.map(l => ({
+                ...l,
+                tasks: l.tasks.map(t =>
+                  t.id === projectId
+                    ? {
+                        ...t,
+                        settings: {
+                          ...t.settings,
+                          viewMode:
+                            t.settings.viewMode === 'compact'
+                              ? 'comfortable'
+                              : 'compact',
+                        },
+                      }
+                    : t
+                ),
+              })),
+            })),
+          })),
+        })),
+
+      // Notification settings
+      updateNotificationSettings: (projectId, settings) =>
+        set(state => ({
+          workspaces: state.workspaces.map(w => ({
+            ...w,
+            spaces: w.spaces.map(s => ({
+              ...s,
+              lists: s.lists.map(l => ({
+                ...l,
+                tasks: l.tasks.map(t =>
+                  t.id === projectId
+                    ? {
+                        ...t,
+                        settings: {
+                          ...t.settings,
+                          notifications: {
+                            ...t.settings.notifications,
+                            ...settings,
+                          },
+                        },
                       }
                     : t
                 ),
