@@ -1,4 +1,10 @@
-export * from './button'
-export * from './dialog'
-export * from './form'
-
+export * from './dialog';
+export * from './button';
+export * from './input';
+export * from './label';
+export * from './select';
+export * from './progress';
+export * from './card';
+export * from './switch';
+export * from './form';
+export * from './command';

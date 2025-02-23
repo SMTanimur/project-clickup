@@ -3,9 +3,10 @@
 import { useProjectStore } from '@/lib/store/project-store';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '../ui';
 
 interface ProjectSettingsProps {
   projectId: string;

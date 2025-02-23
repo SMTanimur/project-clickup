@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { nanoid } from 'nanoid';
+import { User } from './user-store';
 
 export type Priority = 'urgent' | 'high' | 'normal' | 'low' | 'medium';
 export type TaskStatus =
@@ -105,12 +107,19 @@ export interface Space {
   updatedAt: Date;
 }
 
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'member';
+}
+
 export interface Workspace {
   id: string;
   name: string;
-  description?: string;
+  description: string;
+  members: Member[];
   spaces: Space[];
-  members: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -148,24 +157,27 @@ export interface Project {
 
 interface AppState {
   workspaces: Workspace[];
-  currentWorkspace?: Workspace;
+  currentWorkspace: Workspace | null;
   currentSpace?: Space;
   currentList?: List;
   currentTask?: Task;
   currentView: ViewType;
 
   // Workspace actions
-  addWorkspace: (
-    workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>
-  ) => void;
-  updateWorkspace: (workspaceId: string, workspace: Partial<Workspace>) => void;
-  deleteWorkspace: (workspaceId: string) => void;
-  setCurrentWorkspace: (workspaceId: string) => void;
+  createWorkspace: (
+    workspace: {
+      name: string;
+      description: string;
+    },
+    user: User
+  ) => Workspace;
+  updateWorkspace: (id: string, workspace: Partial<Workspace>) => void;
+  deleteWorkspace: (id: string) => void;
+  setCurrentWorkspace: (id: string) => void;
 
   // Space actions
   addSpace: (
-    workspaceId: string,
-    space: Omit<Space, 'id' | 'createdAt' | 'updatedAt'>
+    space: Pick<Space, 'name' | 'color' | 'lists'> & { id: string }
   ) => void;
   updateSpace: (
     workspaceId: string,
@@ -231,75 +243,92 @@ interface AppState {
   ) => void;
 }
 
-export const useStore = create<AppState>()(
+export const useProjectStore = create<AppState>()(
   persist(
     (set): AppState => ({
       workspaces: [],
+      currentWorkspace: null,
       currentView: 'list',
-      currentWorkspace: undefined,
       currentSpace: undefined,
       currentList: undefined,
       currentTask: undefined,
 
       // Workspace actions
-      addWorkspace: workspace =>
-        set(state => ({
-          workspaces: [
-            ...state.workspaces,
+      createWorkspace: (workspace, user) => {
+        const newWorkspace = {
+          id: nanoid(),
+          ...workspace,
+          spaces: [],
+          members: [
             {
-              ...workspace,
-              id: crypto.randomUUID(),
-              spaces: [],
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: 'admin' as const,
             },
           ],
-        })),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-      updateWorkspace: (workspaceId, workspace) =>
+        set(state => ({
+          workspaces: [...state.workspaces, newWorkspace],
+          currentWorkspace: newWorkspace,
+        }));
+
+        return newWorkspace;
+      },
+      updateWorkspace: (id, workspace) =>
         set(state => ({
           workspaces: state.workspaces.map(w =>
-            w.id === workspaceId
-              ? { ...w, ...workspace, updatedAt: new Date() }
-              : w
+            w.id === id ? { ...w, ...workspace, updatedAt: new Date() } : w
           ),
-        })),
-
-      deleteWorkspace: workspaceId =>
-        set(state => ({
-          workspaces: state.workspaces.filter(w => w.id !== workspaceId),
           currentWorkspace:
-            state.currentWorkspace?.id === workspaceId
-              ? undefined
+            state.currentWorkspace?.id === id
+              ? {
+                  ...state.currentWorkspace,
+                  ...workspace,
+                  updatedAt: new Date(),
+                }
               : state.currentWorkspace,
         })),
 
-      setCurrentWorkspace: workspaceId =>
+      deleteWorkspace: id =>
         set(state => ({
-          currentWorkspace: state.workspaces.find(w => w.id === workspaceId),
+          workspaces: state.workspaces.filter(w => w.id !== id),
+          currentWorkspace:
+            state.currentWorkspace?.id === id ? null : state.currentWorkspace,
+        })),
+
+      setCurrentWorkspace: id =>
+        set(state => ({
+          currentWorkspace:
+            state.workspaces.find(w => w.id === id) || state.currentWorkspace,
         })),
 
       // Space actions
-      addSpace: (workspaceId, space) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w =>
-            w.id === workspaceId
-              ? {
-                  ...w,
-                  spaces: [
-                    ...w.spaces,
-                    {
-                      ...space,
-                      id: crypto.randomUUID(),
-                      lists: [],
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    },
-                  ],
-                }
-              : w
-          ),
-        })),
+      addSpace: space =>
+        set(state => {
+          if (!state.currentWorkspace) return state;
+
+          return {
+            workspaces: state.workspaces.map(w =>
+              w.id === state.currentWorkspace?.id
+                ? {
+                    ...w,
+                    spaces: [
+                      ...w.spaces,
+                      {
+                        ...space,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                      },
+                    ],
+                  }
+                : w
+            ),
+          };
+        }),
 
       updateSpace: (workspaceId, spaceId, space) =>
         set(state => ({
@@ -762,9 +791,7 @@ export const useStore = create<AppState>()(
         })),
     }),
     {
-      name: 'clickup-clone-storage',
+      name: 'project-storage',
     }
   )
 );
-
-export const useProjectStore = useStore;

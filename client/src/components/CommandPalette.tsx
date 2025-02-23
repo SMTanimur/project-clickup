@@ -9,14 +9,13 @@ import {
   CommandItem,
 } from '@/components/ui/command';
 import { useProjectStore } from '@/lib/store/project-store';
-import { Search } from 'lucide-react';
 
 interface CommandPaletteProps {
   onClose: () => void;
 }
 
 export function CommandPalette({ onClose }: CommandPaletteProps) {
-  const { workspaces, currentWorkspace } = useProjectStore();
+  const { currentWorkspace } = useProjectStore();
 
   return (
     <Dialog open onOpenChange={onClose}>

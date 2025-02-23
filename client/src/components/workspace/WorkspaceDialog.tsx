@@ -19,7 +19,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useStore } from '@/lib/store/project-store';
+
+import { useUserStore } from '@/lib/store/user-store';
+import { Workspace } from '@/lib/store/project-store';
 
 const workspaceFormSchema = z.object({
   name: z.string().min(1, 'Workspace name is required').max(100),
@@ -32,14 +34,17 @@ interface WorkspaceDialogProps {
   workspaceId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onComplete?: (workspace: Workspace) => void;
 }
 
 export function WorkspaceDialog({
   workspaceId,
   open,
   onOpenChange,
+  onComplete,
 }: WorkspaceDialogProps) {
-  const { workspaces, addWorkspace, updateWorkspace } = useStore();
+  const { workspaces, addWorkspace, updateWorkspace } = use();
+  const { currentUser } = useUserStore();
   const existingWorkspace = workspaceId
     ? workspaces.find(w => w.id === workspaceId)
     : undefined;
@@ -55,12 +60,13 @@ export function WorkspaceDialog({
   function onSubmit(data: WorkspaceFormValues) {
     if (workspaceId) {
       updateWorkspace(workspaceId, data);
-    } else {
-      addWorkspace({
+    } else if (currentUser) {
+      const workspace = addWorkspace({
         ...data,
         spaces: [],
         members: [],
       });
+      onComplete?.(workspace);
     }
     form.reset();
     onOpenChange(false);
