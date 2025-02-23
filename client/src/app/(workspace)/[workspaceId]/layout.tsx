@@ -1,10 +1,21 @@
 'use client';
 
-import { WorkspaceSidebar } from '@/components/workspace/WorkspaceSidebar';
-import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
+import * as React from 'react';
+
 import { useProjectStore } from '@/lib/store/project-store';
-import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useParams} from 'next/navigation';
+
+import {
+
+  SidebarInset,
+  SidebarProvider,
+
+} from '@/components/ui/sidebar';
+
+import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
+import { WorkspaceSidebar } from '@/components';
+
+
 
 export default function WorkspaceLayout({
   children,
@@ -14,19 +25,19 @@ export default function WorkspaceLayout({
   const { workspaceId } = useParams();
   const { setCurrentWorkspace } = useProjectStore();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (workspaceId) {
       setCurrentWorkspace(workspaceId as string);
     }
   }, [workspaceId, setCurrentWorkspace]);
 
   return (
-    <div className='h-screen flex flex-col'>
-      <WorkspaceHeader />
-      <div className='flex-1 flex'>
-        <WorkspaceSidebar />
-        <main className='flex-1 overflow-auto bg-background'>{children}</main>
-      </div>
-    </div>
+    <SidebarProvider>
+      <WorkspaceSidebar />
+      <SidebarInset>
+        <WorkspaceHeader/>
+        <main className='flex-1 overflow-auto relative'>{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
