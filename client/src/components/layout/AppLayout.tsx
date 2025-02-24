@@ -3,11 +3,9 @@
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from '@/components/CommandPalette';
 import { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
