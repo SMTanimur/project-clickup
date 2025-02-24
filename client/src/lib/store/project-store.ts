@@ -6,7 +6,6 @@ import {
   Organization,
   Team,
   Chat,
-  ChatMember,
   Message,
   Document,
   Task,
@@ -17,10 +16,6 @@ import {
   DocType,
   ApprovalType,
   ViewType,
-  DocumentPermissions,
-  Priority,
-  TaskStatus,
-
 } from '@/types';
 
 interface AppState {
@@ -237,13 +232,17 @@ export const useProjectStore = create<AppState>()(
               t.id === teamId ? { ...t, ...team, updatedAt: new Date() } : t
             ),
           })),
+          currentTeam:
+            state.currentTeam?.id === teamId
+              ? { ...state.currentTeam, ...team, updatedAt: new Date() }
+              : state.currentTeam,
         })),
 
       deleteTeam: teamId =>
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            teams: o.teams?.filter(t => t.id !== teamId) || [],
+            teams: o.teams?.filter(t => t.id !== teamId),
           })),
           currentTeam:
             state.currentTeam?.id === teamId ? undefined : state.currentTeam,
@@ -251,9 +250,10 @@ export const useProjectStore = create<AppState>()(
 
       setCurrentTeam: teamId =>
         set(state => ({
-          currentTeam: state.currentOrganization?.teams?.find(
-            t => t.id === teamId
-          ),
+          currentTeam:
+            state.organizations
+              .flatMap(o => o.teams || [])
+              .find(t => t.id === teamId) || state.currentTeam,
         })),
 
       // Chat actions
@@ -272,7 +272,6 @@ export const useProjectStore = create<AppState>()(
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       organizationId,
-                      messages: [],
                       members: chat.members.map(userId => ({
                         id: nanoid(),
                         role: 'MEMBER',
@@ -280,7 +279,8 @@ export const useProjectStore = create<AppState>()(
                         lastRead: new Date(),
                         chatId: nanoid(),
                         userId,
-                      })) as ChatMember[],
+                      })),
+                      messages: [],
                     } as Chat,
                   ],
                 }
@@ -296,13 +296,17 @@ export const useProjectStore = create<AppState>()(
               c.id === chatId ? { ...c, ...chat, updatedAt: new Date() } : c
             ),
           })),
+          currentChat:
+            state.currentChat?.id === chatId
+              ? { ...state.currentChat, ...chat, updatedAt: new Date() }
+              : state.currentChat,
         })),
 
       deleteChat: chatId =>
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            chats: o.chats?.filter(c => c.id !== chatId) || [],
+            chats: o.chats?.filter(c => c.id !== chatId),
           })),
           currentChat:
             state.currentChat?.id === chatId ? undefined : state.currentChat,
@@ -310,9 +314,10 @@ export const useProjectStore = create<AppState>()(
 
       setCurrentChat: chatId =>
         set(state => ({
-          currentChat: state.currentOrganization?.chats?.find(
-            c => c.id === chatId
-          ),
+          currentChat:
+            state.organizations
+              .flatMap(o => o.chats || [])
+              .find(c => c.id === chatId) || state.currentChat,
         })),
 
       sendMessage: (chatId, message) =>
@@ -330,6 +335,7 @@ export const useProjectStore = create<AppState>()(
                         id: nanoid(),
                         createdAt: new Date(),
                         updatedAt: new Date(),
+                        chatId,
                       } as Message,
                     ],
                   }
@@ -350,16 +356,16 @@ export const useProjectStore = create<AppState>()(
                     {
                       ...document,
                       id: nanoid(),
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      organizationId,
-                      creatorId: o.id,
                       isTemplate: false,
                       permissions: {
                         public: false,
                         roles: [],
                         users: [],
-                      } as DocumentPermissions,
+                      },
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId,
+                      creatorId: o.id,
                     } as Document,
                   ],
                 }
@@ -377,13 +383,17 @@ export const useProjectStore = create<AppState>()(
                 : d
             ),
           })),
+          currentDocument:
+            state.currentDocument?.id === documentId
+              ? { ...state.currentDocument, ...document, updatedAt: new Date() }
+              : state.currentDocument,
         })),
 
       deleteDocument: documentId =>
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            documents: o.documents?.filter(d => d.id !== documentId) || [],
+            documents: o.documents?.filter(d => d.id !== documentId),
           })),
           currentDocument:
             state.currentDocument?.id === documentId
@@ -393,29 +403,33 @@ export const useProjectStore = create<AppState>()(
 
       setCurrentDocument: documentId =>
         set(state => ({
-          currentDocument: state.currentOrganization?.documents?.find(
-            d => d.id === documentId
-          ),
+          currentDocument:
+            state.organizations
+              .flatMap(o => o.documents || [])
+              .find(d => d.id === documentId) || state.currentDocument,
         })),
 
       // Task actions
       createTask: task =>
         set(state => ({
-          organizations: state.organizations.map(o => ({
-            ...o,
-            tasks: [
-              ...(o.tasks || []),
-              {
-                ...task,
-                id: nanoid(),
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'TODO' as TaskStatus,
-                priority: 'NORMAL' as Priority,
-                creatorId: o.id,
-              } as Task,
-            ],
-          })),
+          organizations: state.organizations.map(o =>
+            o.id === state.currentOrganization?.id
+              ? {
+                  ...o,
+                  tasks: [
+                    ...(o.tasks || []),
+                    {
+                      ...task,
+                      id: nanoid(),
+                      status: task.status || 'TODO',
+                      priority: task.priority || 'NORMAL',
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    } as Task,
+                  ],
+                }
+              : o
+          ),
         })),
 
       updateTask: (taskId, task) =>
@@ -426,13 +440,17 @@ export const useProjectStore = create<AppState>()(
               t.id === taskId ? { ...t, ...task, updatedAt: new Date() } : t
             ),
           })),
+          currentTask:
+            state.currentTask?.id === taskId
+              ? { ...state.currentTask, ...task, updatedAt: new Date() }
+              : state.currentTask,
         })),
 
       deleteTask: taskId =>
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            tasks: o.tasks?.filter(t => t.id !== taskId) || [],
+            tasks: o.tasks?.filter(t => t.id !== taskId),
           })),
           currentTask:
             state.currentTask?.id === taskId ? undefined : state.currentTask,
@@ -440,9 +458,10 @@ export const useProjectStore = create<AppState>()(
 
       setCurrentTask: taskId =>
         set(state => ({
-          currentTask: state.currentOrganization?.tasks?.find(
-            t => t.id === taskId
-          ),
+          currentTask:
+            state.organizations
+              .flatMap(o => o.tasks || [])
+              .find(t => t.id === taskId) || state.currentTask,
         })),
 
       // Event actions
@@ -457,11 +476,10 @@ export const useProjectStore = create<AppState>()(
                     {
                       ...event,
                       id: nanoid(),
+                      isAllDay: false,
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       organizationId,
-                      isAllDay: false,
-                      creatorId: o.id,
                     } as Event,
                   ],
                 }
@@ -483,26 +501,30 @@ export const useProjectStore = create<AppState>()(
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            events: o.events?.filter(e => e.id !== eventId) || [],
+            events: o.events?.filter(e => e.id !== eventId),
           })),
         })),
 
       // Meeting actions
       createMeeting: meeting =>
         set(state => ({
-          organizations: state.organizations.map(o => ({
-            ...o,
-            meetings: [
-              ...(o.meetings || []),
-              {
-                ...meeting,
-                id: nanoid(),
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                organizerId: o.id,
-              } as Meeting,
-            ],
-          })),
+          organizations: state.organizations.map(o =>
+            o.id === state.currentOrganization?.id
+              ? {
+                  ...o,
+                  meetings: [
+                    ...(o.meetings || []),
+                    {
+                      ...meeting,
+                      id: nanoid(),
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizerId: state.currentOrganization.id,
+                    } as Meeting,
+                  ],
+                }
+              : o
+          ),
         })),
 
       updateMeeting: (meetingId, meeting) =>
@@ -521,7 +543,7 @@ export const useProjectStore = create<AppState>()(
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            meetings: o.meetings?.filter(m => m.id !== meetingId) || [],
+            meetings: o.meetings?.filter(m => m.id !== meetingId),
           })),
         })),
 
@@ -537,11 +559,10 @@ export const useProjectStore = create<AppState>()(
                     {
                       ...approval,
                       id: nanoid(),
+                      status: 'PENDING',
                       createdAt: new Date(),
                       updatedAt: new Date(),
-                      organizationId: o.id,
-                      status: 'PENDING',
-                      creatorId: o.id,
+                      organizationId,
                     } as Approval,
                   ],
                 }
@@ -565,7 +586,7 @@ export const useProjectStore = create<AppState>()(
         set(state => ({
           organizations: state.organizations.map(o => ({
             ...o,
-            approvals: o.approvals?.filter(a => a.id !== approvalId) || [],
+            approvals: o.approvals?.filter(a => a.id !== approvalId),
           })),
         })),
 
@@ -573,8 +594,7 @@ export const useProjectStore = create<AppState>()(
       setCurrentView: view => set({ currentView: view }),
     }),
     {
-      name: 'project-storage',
-      version: 1,
+      name: 'project-store',
     }
   )
 );

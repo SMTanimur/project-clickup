@@ -1,16 +1,15 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Workspace } from '@/lib/store/project-store';
-import { TaskStatus } from '@/lib/store/project-store';
+import { Organization, TaskStatus } from '@/types';
 
 interface TasksOverviewProps {
-  workspace: Workspace | null;
+  organization: Organization | null;
 }
 
-export function TasksOverview({ workspace }: TasksOverviewProps) {
-  if (!workspace) return null;
-  const tasksByStatus = getTasksByStatus(workspace);
+export function TasksOverview({ organization }: TasksOverviewProps) {
+  if (!organization) return null;
+  const tasksByStatus = getTasksByStatus(organization);
 
   return (
     <Card>
@@ -22,7 +21,7 @@ export function TasksOverview({ workspace }: TasksOverviewProps) {
           {Object.entries(tasksByStatus).map(([status, count]) => (
             <div key={status} className='flex flex-col'>
               <span className='text-sm font-medium text-muted-foreground capitalize'>
-                {status.replace('-', ' ')}
+                {status.replace('_', ' ')}
               </span>
               <span className='text-2xl font-bold'>{count}</span>
             </div>
@@ -33,23 +32,20 @@ export function TasksOverview({ workspace }: TasksOverviewProps) {
   );
 }
 
-function getTasksByStatus(workspace?: Workspace): Record<TaskStatus, number> {
+function getTasksByStatus(
+  organization: Organization
+): Record<TaskStatus, number> {
   const initial: Record<TaskStatus, number> = {
-    todo: 0,
-    'in-progress': 0,
-    review: 0,
-    completed: 0,
-    blocked: 0,
+    TODO: 0,
+    IN_PROGRESS: 0,
+    COMPLETED: 0,
+    CANCELLED: 0,
   };
 
-  if (!workspace) return initial;
+  if (!organization.tasks) return initial;
 
-  return workspace.spaces.reduce((acc, space) => {
-    space.lists.forEach(list => {
-      list.tasks.forEach(task => {
-        acc[task.status] = (acc[task.status] || 0) + 1;
-      });
-    });
+  return organization.tasks.reduce((acc, task) => {
+    acc[task.status] = (acc[task.status] || 0) + 1;
     return acc;
   }, initial);
 }

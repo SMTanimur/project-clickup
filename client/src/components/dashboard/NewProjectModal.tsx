@@ -15,78 +15,58 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useProjectStore } from '@/lib/store/project-store';
 import { useRouter } from 'next/navigation';
-import { nanoid } from 'nanoid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useUserStore } from '@/lib/store/user-store';
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Project name is required'),
-  template: z.enum(['agile', 'waterfall', 'custom'], {
-    required_error: 'Please select a template',
-  }),
+  name: z.string().min(1, 'Team name is required'),
+  description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface NewProjectModalProps {
+interface NewTeamModalProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function NewProjectModal({ open, setOpen }: NewProjectModalProps) {
+export function NewTeamModal({ open, setOpen }: NewTeamModalProps) {
   const router = useRouter();
-  const { currentWorkspace, createWorkspace, addSpace } = useProjectStore();
-  const { currentUser } = useUserStore();
+  const { currentOrganization, createTeam } = useProjectStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      template: 'agile',
+      description: '',
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    if (!currentWorkspace) {
-      if (!currentUser) return;
-      // Create a workspace if none exists
-      // createWorkspace({
-      //   name: 'My Workspace',
-      //   description: 'Default workspace',
-      // }, currentUser);
+    if (!currentOrganization) {
       return;
     }
 
-    const newSpaceId = nanoid();
-    addSpace({
-      id: newSpaceId,
+    createTeam(currentOrganization.id, {
       name: data.name,
-      color: 'blue',
-      lists: [],
+      description: data.description,
     });
 
     setOpen(false);
     form.reset();
-    router.push(`/${currentWorkspace.id}/space/${newSpaceId}`);
+    router.push(`/organizations/${currentOrganization.id}/teams`);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>Create New Team</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
@@ -95,9 +75,9 @@ export function NewProjectModal({ open, setOpen }: NewProjectModalProps) {
               name='name'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Name</FormLabel>
+                  <FormLabel>Team Name</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter project name' {...field} />
+                    <Input placeholder='Enter team name' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -105,25 +85,13 @@ export function NewProjectModal({ open, setOpen }: NewProjectModalProps) {
             />
             <FormField
               control={form.control}
-              name='template'
+              name='description'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Template</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select a template' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value='agile'>Agile</SelectItem>
-                      <SelectItem value='waterfall'>Waterfall</SelectItem>
-                      <SelectItem value='custom'>Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder='Enter team description' {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -136,7 +104,7 @@ export function NewProjectModal({ open, setOpen }: NewProjectModalProps) {
               >
                 Cancel
               </Button>
-              <Button type='submit'>Create Project</Button>
+              <Button type='submit'>Create Team</Button>
             </div>
           </form>
         </Form>

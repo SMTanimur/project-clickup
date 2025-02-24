@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useProjectStore, ViewType } from '@/lib/store/project-store';
+import { useProjectStore } from '@/lib/store/project-store';
 import { Button } from '@/components/ui/button';
 import {
   LayoutGrid,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { ViewType } from '@/types';
 
 const viewOptions: {
   icon: React.ReactElement;

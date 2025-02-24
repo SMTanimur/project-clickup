@@ -224,6 +224,14 @@ export interface DocumentEdit {
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type Priority = 'URGENT' | 'HIGH' | 'NORMAL' | 'LOW';
 
+export interface TaskList {
+  id: string;
+  name: string;
+  tasks: Task[];
+  order: number;
+  color?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -236,6 +244,7 @@ export interface Task {
   updatedAt: Date;
   creatorId: string;
   assigneeId?: string;
+  listId: string;
 }
 
 // Event related types
@@ -361,3 +370,26 @@ export interface ApprovalStep {
 
 // View related types
 export type ViewType = 'list' | 'board' | 'calendar' | 'gantt' | 'timeline';
+
+// Project and Workspace types
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  template: 'agile' | 'waterfall' | 'custom';
+  createdAt: Date;
+  updatedAt: Date;
+  organizationId: string;
+  creatorId: string;
+  lists: TaskList[];
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  organizationId: string;
+  projects: Project[];
+}

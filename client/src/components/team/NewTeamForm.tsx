@@ -13,33 +13,32 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
+import { Textarea } from '@/components/ui/textarea';
 import { nanoid } from 'nanoid';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  color: z.enum(['purple', 'blue', 'green', 'yellow', 'red', 'pink'] as const),
+  description: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-interface NewSpaceFormProps {
-  onSubmit: (data: FormData & { id: string }) => void;
+interface NewTeamFormProps {
+  organizationId: string;
+  onSubmit: (data: FormData & { id: string; organizationId: string }) => void;
+  onCancel?: () => void;
 }
 
-export function NewSpaceForm({ onSubmit }: NewSpaceFormProps) {
+export function NewTeamForm({
+  organizationId,
+  onSubmit,
+  onCancel,
+}: NewTeamFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      color: 'blue',
+      description: '',
     },
   });
 
@@ -47,6 +46,7 @@ export function NewSpaceForm({ onSubmit }: NewSpaceFormProps) {
     onSubmit({
       ...data,
       id: nanoid(),
+      organizationId,
     });
   };
 
@@ -61,9 +61,9 @@ export function NewSpaceForm({ onSubmit }: NewSpaceFormProps) {
           name='name'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Space Name</FormLabel>
+              <FormLabel>Team Name</FormLabel>
               <FormControl>
-                <Input placeholder='Enter space name' {...field} />
+                <Input placeholder='Enter team name' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -72,32 +72,29 @@ export function NewSpaceForm({ onSubmit }: NewSpaceFormProps) {
 
         <FormField
           control={form.control}
-          name='color'
+          name='description'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Color</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select a color' />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value='purple'>Purple</SelectItem>
-                  <SelectItem value='blue'>Blue</SelectItem>
-                  <SelectItem value='green'>Green</SelectItem>
-                  <SelectItem value='yellow'>Yellow</SelectItem>
-                  <SelectItem value='red'>Red</SelectItem>
-                  <SelectItem value='pink'>Pink</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormLabel>Description (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder='Enter team description'
+                  className='resize-none'
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
         <div className='flex justify-end gap-2 pt-4'>
-          <Button type='submit'>Create Space</Button>
+          {onCancel && (
+            <Button type='button' variant='outline' onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type='submit'>Create Team</Button>
         </div>
       </form>
     </Form>
