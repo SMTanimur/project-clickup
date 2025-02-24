@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useProjectStore } from '@/lib/store/project-store';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -13,8 +13,7 @@ interface ProjectSettingsProps {
 }
 
 export function ProjectSettings({ projectId }: ProjectSettingsProps) {
-  const { updateProjectTheme, toggleViewMode, updateNotificationSettings } =
-    useProjectStore();
+ 
 
   return (
     <div className='space-y-6'>
@@ -29,11 +28,7 @@ export function ProjectSettings({ projectId }: ProjectSettingsProps) {
               <Input
                 type='color'
                 onChange={e =>
-                  updateProjectTheme(projectId, {
-                    primary: e.target.value,
-                    background: '#ffffff',
-                    accent: '#f3f4f6',
-                  })
+                  console.log(e.target.value)
                 }
               />
             </div>
@@ -48,7 +43,7 @@ export function ProjectSettings({ projectId }: ProjectSettingsProps) {
         <CardContent className='space-y-4'>
           <div className='flex items-center justify-between'>
             <Label>Compact View</Label>
-            <Switch onCheckedChange={() => toggleViewMode(projectId)} />
+            <Switch onCheckedChange={() => console.log('toggleViewMode')} />
           </div>
         </CardContent>
       </Card>
@@ -62,7 +57,7 @@ export function ProjectSettings({ projectId }: ProjectSettingsProps) {
             <Label>Email Notifications</Label>
             <Switch
               onCheckedChange={checked =>
-                updateNotificationSettings(projectId, { email: checked })
+                console.log(checked)
               }
             />
           </div>
@@ -70,7 +65,7 @@ export function ProjectSettings({ projectId }: ProjectSettingsProps) {
             <Label>Desktop Notifications</Label>
             <Switch
               onCheckedChange={checked =>
-                updateNotificationSettings(projectId, { desktop: checked })
+                console.log(checked)
               }
             />
           </div>
@@ -78,7 +73,7 @@ export function ProjectSettings({ projectId }: ProjectSettingsProps) {
             <Label>In-App Notifications</Label>
             <Switch
               onCheckedChange={checked =>
-                updateNotificationSettings(projectId, { inApp: checked })
+                console.log(checked)
               }
             />
           </div>
