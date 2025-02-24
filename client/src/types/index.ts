@@ -370,3 +370,26 @@ export interface ApprovalStep {
 
 // View related types
 export type ViewType = 'list' | 'board' | 'calendar' | 'gantt' | 'timeline';
+
+// Project and Workspace types
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  template: 'agile' | 'waterfall' | 'custom';
+  createdAt: Date;
+  updatedAt: Date;
+  organizationId: string;
+  creatorId: string;
+  lists: TaskList[];
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  organizationId: string;
+  projects: Project[];
+}
