@@ -4,9 +4,16 @@ import { useProjectStore } from '@/lib/store/project-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-export default function WorkspaceMembersPage() {
-  const { currentWorkspace } = useProjectStore();
+export default function OrganizationMembersPage() {
+  const { organizationId } = useParams();
+  const { organizations } = useProjectStore();
+  const organization = organizations.find(org => org.id === organizationId);
+
+  if (!organization) {
+    return null;
+  }
 
   return (
     <div className='p-6 space-y-6'>
@@ -20,25 +27,34 @@ export default function WorkspaceMembersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Workspace Members</CardTitle>
+          <CardTitle>Organization Members</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='space-y-4'>
-            {currentWorkspace?.members.map(member => (
+            {organization.members?.map(member => (
               <div
                 key={member.id}
                 className='flex items-center justify-between p-4 border rounded-lg'
               >
                 <div className='flex items-center gap-4'>
-                  <div className='w-10 h-10 rounded-full bg-accent' />
+                  <div className='w-10 h-10 rounded-full bg-accent flex items-center justify-center text-sm font-medium'>
+                    {member.role[0]}
+                  </div>
                   <div>
-                    <div className='font-medium'>{member.name}</div>
+                    <div className='font-medium'>
+                      {member.department || member.role}
+                    </div>
                     <div className='text-sm text-muted-foreground'>
-                      {member.email}
+                      {member.title || 'Member'}
                     </div>
                   </div>
                 </div>
-                <Button variant='outline'>Remove</Button>
+                <div className='flex items-center gap-2'>
+                  <div className='text-sm text-muted-foreground'>
+                    Joined {new Date(member.joinedAt).toLocaleDateString()}
+                  </div>
+                  <Button variant='outline'>Manage</Button>
+                </div>
               </div>
             ))}
           </div>

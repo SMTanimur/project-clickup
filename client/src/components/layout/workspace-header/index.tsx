@@ -22,29 +22,29 @@ import Link from 'next/link';
 
 export function WorkspaceSidebar() {
   const pathname = usePathname();
-  const { workspaceId } = useParams();
-  const { currentWorkspace } = useProjectStore();
+  const { organizationId } = useParams();
+  const { currentOrganization } = useProjectStore();
 
   const navItems = [
     {
       title: 'Overview',
       icon: LayoutGrid,
-      href: `/${workspaceId}`,
+        href: `/${organizationId}`,
     },
     {
       title: 'Projects',
       icon: FolderKanban,
-      href: `/${workspaceId}/projects`,
+      href: `/${organizationId}/projects`,
     },
     {
       title: 'Calendar',
       icon: Calendar,
-      href: `/${workspaceId}/calendar`,
+      href: `/${organizationId}/calendar`,
     },
     {
       title: 'Messages',
       icon: MessageSquare,
-      href: `/${workspaceId}/messages`,
+      href: `/${organizationId}/messages`,
     },
   ];
 
@@ -52,19 +52,19 @@ export function WorkspaceSidebar() {
     {
       title: 'Members',
       icon: Users,
-      href: `/${workspaceId}/members`,
+      href: `/${organizationId}/members`,
     },
     {
       title: 'Settings',
       icon: Settings,
-      href: `/${workspaceId}/settings`,
+      href: `/${organizationId}/settings`,
     },
   ];
 
   return (
     <Sidebar>
       <SidebarHeader className='p-4 border-b'>
-        <h1 className='text-lg font-semibold'>{currentWorkspace?.name}</h1>
+        <h1 className='text-lg font-semibold'>{currentOrganization?.name}</h1>
         <div className='relative mt-4'>
           <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
           <Input placeholder='Search...' className='pl-8' />
@@ -91,21 +91,7 @@ export function WorkspaceSidebar() {
           <div className='px-2 mb-2'>
             <h3 className='text-sm font-medium'>Projects</h3>
           </div>
-          {currentWorkspace?.spaces.map(space => (
-            <Link key={space.id} href={`/${workspaceId}/space/${space.id}`}>
-              <Button
-                variant='ghost'
-                className='w-full justify-start gap-2 pl-6'
-                data-active={pathname === `/${workspaceId}/space/${space.id}`}
-              >
-                <div
-                  className='w-2 h-2 rounded-full'
-                  style={{ backgroundColor: space.color }}
-                />
-                <span className='truncate'>{space.name}</span>
-              </Button>
-            </Link>
-          ))}
+         
         </div>
       </SidebarContent>
 
