@@ -8,8 +8,13 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  displayName?: string;
   password: string;
   avatar?: string;
+  phoneNumber?: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  timezone: string;
+  language: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,12 +27,17 @@ interface UserState {
   login: (email: string, password: string) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 interface SignupData {
   email: string;
   password: string;
   name: string;
+  displayName?: string;
+  phoneNumber?: string;
+  language?: string;
+  timezone?: string;
 }
 
 const COOKIE_OPTIONS = {
@@ -39,15 +49,12 @@ const COOKIE_OPTIONS = {
 };
 
 const setCookieWithOptions = (token: string) => {
-  console.log({COOKIE_OPTIONS:token})
-  // First try with all options
   try {
-    setCookie('clickup_session', token );
+    setCookie('auth_token', token, COOKIE_OPTIONS);
   } catch (error) {
-    // If that fails, try with minimal options
     console.error('Failed to set cookie with full options:', error);
     try {
-      setCookie('clickup_session', token, {
+      setCookie('auth_token', token, {
         path: '/',
         sameSite: 'lax',
       });
@@ -58,10 +65,11 @@ const setCookieWithOptions = (token: string) => {
 };
 
 export const useUserStore = create<UserState>()(
-  persist<UserState>(
+  persist(
     (set, get) => ({
-      users: [] as User[],
+      users: [],
       currentUser: null,
+
       setCurrentUser: user => {
         set({ currentUser: user });
         const token = generateToken({
@@ -71,14 +79,16 @@ export const useUserStore = create<UserState>()(
         });
         setCookieWithOptions(token);
       },
+
       clearCurrentUser: () => {
         set({ currentUser: null });
         try {
-          deleteCookie('clickup_session', COOKIE_OPTIONS);
+          deleteCookie('auth_token', COOKIE_OPTIONS);
         } catch (error) {
           console.error('Failed to delete cookie:', error);
         }
       },
+
       login: async (email, password) => {
         const user = get().users.find(
           user => user.email === email && user.password === password
@@ -91,18 +101,25 @@ export const useUserStore = create<UserState>()(
           email: user.email,
           name: user.name,
         });
-        console.log({ token });
         setCookieWithOptions(token);
       },
+
       signup: async data => {
         const users = get().users;
         if (users.find(user => user.email === data.email)) {
           throw new Error('User already exists');
         }
 
-        const newUser = {
+        const newUser: User = {
           id: nanoid(),
-          ...data,
+          email: data.email,
+          name: data.name,
+          displayName: data.displayName,
+          password: data.password,
+          phoneNumber: data.phoneNumber,
+          status: 'ACTIVE',
+          timezone: data.timezone || 'UTC',
+          language: data.language || 'en',
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -117,16 +134,34 @@ export const useUserStore = create<UserState>()(
           email: newUser.email,
           name: newUser.name,
         });
-        console.log({ token });
         setCookieWithOptions(token);
       },
+
       logout: () => {
         set({ currentUser: null });
         try {
-          deleteCookie('clickup_session', COOKIE_OPTIONS);
+          deleteCookie('auth_token', COOKIE_OPTIONS);
         } catch (error) {
           console.error('Failed to delete cookie:', error);
         }
+      },
+
+      updateProfile: async data => {
+        const currentUser = get().currentUser;
+        if (!currentUser) throw new Error('No user logged in');
+
+        const updatedUser = {
+          ...currentUser,
+          ...data,
+          updatedAt: new Date(),
+        };
+
+        set(state => ({
+          users: state.users.map(u =>
+            u.id === currentUser.id ? updatedUser : u
+          ),
+          currentUser: updatedUser,
+        }));
       },
     }),
     {

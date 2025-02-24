@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useProjectStore } from '@/lib/store/project-store';
 import { useParams, usePathname } from 'next/navigation';
 import {
   LayoutGrid,
@@ -14,31 +13,31 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export function WorkspaceSidebar() {
+export function OrganizationSidebar() {
   const pathname = usePathname();
-  const { workspaceId } = useParams();
-  const { currentWorkspace } = useProjectStore();
+  const { organizationId } = useParams();
+
 
   const navItems = [
     {
       title: 'Overview',
       icon: LayoutGrid,
-      href: `/${workspaceId}`,
+      href: `/${organizationId}`,
     },
     {
       title: 'Projects',
       icon: FolderKanban,
-      href: `/${workspaceId}/projects`,
+      href: `/${organizationId}/projects`,
     },
     {
       title: 'Calendar',
       icon: Calendar,
-      href: `/${workspaceId}/calendar`,
+      href: `/${organizationId}/calendar`,
     },
     {
       title: 'Messages',
       icon: MessageSquare,
-      href: `/${workspaceId}/messages`,
+      href: `/${organizationId}/messages`,
     },
   ];
 
@@ -46,12 +45,12 @@ export function WorkspaceSidebar() {
     {
       title: 'Members',
       icon: Users,
-      href: `/${workspaceId}/members`,
+      href: `/${organizationId}/members`,
     },
     {
       title: 'Settings',
       icon: Settings,
-      href: `/${workspaceId}/settings`,
+      href: `/${organizationId}/settings`,
     },
   ];
 
@@ -73,27 +72,7 @@ export function WorkspaceSidebar() {
           </Link>
         ))}
 
-        <div className='pt-4 border-t'>
-          <h3 className='text-sm font-medium mb-2 px-2'>Projects</h3>
-          {currentWorkspace?.spaces.map(space => (
-            <Link key={space.id} href={`/${workspaceId}/space/${space.id}`}>
-              <Button
-                variant='ghost'
-                className={cn(
-                  'w-full justify-start gap-2 pl-6',
-                  pathname === `/${workspaceId}/space/${space.id}` &&
-                    'bg-accent'
-                )}
-              >
-                <div
-                  className='w-2 h-2 rounded-full'
-                  style={{ backgroundColor: space.color }}
-                />
-                {space.name}
-              </Button>
-            </Link>
-          ))}
-        </div>
+       
       </div>
 
       <div className='p-4 border-t space-y-2'>

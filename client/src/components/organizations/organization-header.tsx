@@ -5,13 +5,13 @@ import { Search, Bell, HelpCircle, Settings, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export function WorkspaceHeader() {
-  const { currentWorkspace } = useProjectStore();
+export function OrganizationHeader() {
+  const { currentOrganization } = useProjectStore();
 
   return (
     <div className='h-14 border-b bg-card flex items-center justify-between px-4 sticky top-0 z-10'>
       <div className='flex items-center gap-4'>
-        <h1 className='text-lg font-semibold'>{currentWorkspace?.name}</h1>
+        <h1 className='text-lg font-semibold'>{currentOrganization?.name}</h1>
       </div>
 
       <div className='flex items-center gap-4'>

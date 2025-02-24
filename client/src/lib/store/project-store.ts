@@ -2,505 +2,437 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
 import { User } from './user-store';
+import {
+  Organization,
+  Team,
+  Chat,
+  ChatMember,
+  Message,
+  Document,
+  Task,
+  Event,
+  Meeting,
+  Approval,
+  ChatType,
+  DocType,
+  ApprovalType,
+  ViewType,
+  DocumentPermissions,
+  Priority,
+  TaskStatus,
 
-export type Priority = 'urgent' | 'high' | 'normal' | 'low' | 'medium';
-export type TaskStatus =
-  | 'todo'
-  | 'in-progress'
-  | 'review'
-  | 'completed'
-  | 'blocked';
-export type ViewType = 'list' | 'board' | 'calendar' | 'gantt' | 'timeline';
-export type SpaceColor =
-  | 'purple'
-  | 'blue'
-  | 'green'
-  | 'yellow'
-  | 'red'
-  | 'pink';
-
-export interface Comment {
-  id: string;
-  content: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Checklist {
-  id: string;
-  title: string;
-  items: ChecklistItem[];
-}
-
-export interface ChecklistItem {
-  id: string;
-  content: string;
-  isCompleted: boolean;
-  assignedTo?: string;
-  dueDate?: Date;
-}
-
-export interface CustomField {
-  id: string;
-  name: string;
-  type:
-    | 'text'
-    | 'number'
-    | 'date'
-    | 'select'
-    | 'user'
-    | 'theme'
-    | 'viewMode'
-    | 'notifications';
-  value:
-    | string
-    | number
-    | Date
-    | { id: string; label: string }
-    | string[]
-    | { primary: string; background: string; accent: string }
-    | 'compact'
-    | 'comfortable'
-    | { email: boolean; desktop: boolean; inApp: boolean };
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  priority: Priority;
-  assignees: string[];
-  tags: string[];
-  startDate?: Date;
-  dueDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  parentId?: string;
-  subtasks: Task[];
-  checklists: Checklist[];
-  comments: Comment[];
-  customFields: CustomField[];
-  timeEstimate?: number; // in minutes
-  timeSpent?: number; // in minutes
-  dependencies: string[]; // task IDs that this task depends on
-  attachments: string[]; // URLs to attached files
-  settings: ProjectSettings;
-}
-
-export interface List {
-  id: string;
-  name: string;
-  tasks: Task[];
-  color?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Space {
-  id: string;
-  name: string;
-  color: SpaceColor;
-  lists: List[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Member {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'member';
-}
-
-export interface Workspace {
-  id: string;
-  name: string;
-  description: string;
-  members: Member[];
-  spaces: Space[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type ProjectTemplate = 'agile' | 'waterfall' | 'custom';
-
-export interface ProjectTheme {
-  primary: string;
-  background: string;
-  accent: string;
-}
-
-export interface ProjectSettings {
-  theme: ProjectTheme;
-  viewMode: 'compact' | 'comfortable';
-  notifications: {
-    email: boolean;
-    desktop: boolean;
-    inApp: boolean;
-  };
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  description: string;
-  template: ProjectTemplate;
-  createdAt: Date;
-  updatedAt: Date;
-  teamMembers: string[]; // User IDs
-  status: 'active' | 'completed' | 'archived';
-  settings: ProjectSettings;
-  customFields: CustomField[];
-}
+} from '@/types';
 
 interface AppState {
-  workspaces: Workspace[];
-  currentWorkspace: Workspace | null;
-  currentSpace?: Space;
-  currentList?: List;
+  organizations: Organization[];
+  currentOrganization: Organization | null;
+  currentTeam?: Team;
+  currentChat?: Chat;
+  currentDocument?: Document;
   currentTask?: Task;
   currentView: ViewType;
 
-  // Workspace actions
-  createWorkspace: (
-    workspace: {
+  // Organization actions
+  createOrganization: (
+    organization: {
       name: string;
-      description: string;
+      description?: string;
+      domain?: string;
     },
     user: User
-  ) => Workspace;
-  updateWorkspace: (id: string, workspace: Partial<Workspace>) => void;
-  deleteWorkspace: (id: string) => void;
-  setCurrentWorkspace: (id: string) => void;
+  ) => Organization;
+  updateOrganization: (id: string, organization: Partial<Organization>) => void;
+  deleteOrganization: (id: string) => void;
+  setCurrentOrganization: (id: string) => void;
 
-  // Space actions
-  addSpace: (
-    space: Pick<Space, 'name' | 'color' | 'lists'> & { id: string }
+  // Team actions
+  createTeam: (
+    organizationId: string,
+    team: {
+      name: string;
+      description?: string;
+    }
   ) => void;
-  updateSpace: (
-    workspaceId: string,
-    spaceId: string,
-    space: Partial<Space>
-  ) => void;
-  deleteSpace: (workspaceId: string, spaceId: string) => void;
-  setCurrentSpace: (spaceId: string) => void;
+  updateTeam: (teamId: string, team: Partial<Team>) => void;
+  deleteTeam: (teamId: string) => void;
+  setCurrentTeam: (teamId: string) => void;
 
-  // List actions
-  addList: (
-    spaceId: string,
-    list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>
+  // Chat actions
+  createChat: (
+    organizationId: string,
+    chat: {
+      type: ChatType;
+      name?: string;
+      members: string[];
+    }
   ) => void;
-  updateList: (spaceId: string, listId: string, list: Partial<List>) => void;
-  deleteList: (spaceId: string, listId: string) => void;
-  setCurrentList: (listId: string) => void;
+  updateChat: (chatId: string, chat: Partial<Chat>) => void;
+  deleteChat: (chatId: string) => void;
+  setCurrentChat: (chatId: string) => void;
+  sendMessage: (chatId: string, message: Partial<Message>) => void;
+
+  // Document actions
+  createDocument: (
+    organizationId: string,
+    document: {
+      title: string;
+      content: string;
+      type: DocType;
+      parentId?: string;
+    }
+  ) => void;
+  updateDocument: (documentId: string, document: Partial<Document>) => void;
+  deleteDocument: (documentId: string) => void;
+  setCurrentDocument: (documentId: string) => void;
 
   // Task actions
-  addTask: (
-    listId: string,
-    task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
-  ) => void;
-  updateTask: (listId: string, taskId: string, task: Partial<Task>) => void;
-  deleteTask: (listId: string, taskId: string) => void;
+  createTask: (task: Partial<Task>) => void;
+  updateTask: (taskId: string, task: Partial<Task>) => void;
+  deleteTask: (taskId: string) => void;
   setCurrentTask: (taskId: string) => void;
-  moveTask: (
-    taskId: string,
-    sourceListId: string,
-    targetListId: string
+
+  // Event actions
+  createEvent: (
+    organizationId: string,
+    event: {
+      title: string;
+      description?: string;
+      startTime: Date;
+      endTime: Date;
+      attendees?: string[];
+    }
   ) => void;
+  updateEvent: (eventId: string, event: Partial<Event>) => void;
+  deleteEvent: (eventId: string) => void;
+
+  // Meeting actions
+  createMeeting: (meeting: {
+    title: string;
+    description?: string;
+    startTime: Date;
+    endTime: Date;
+    attendees?: string[];
+  }) => void;
+  updateMeeting: (meetingId: string, meeting: Partial<Meeting>) => void;
+  deleteMeeting: (meetingId: string) => void;
+
+  // Approval actions
+  createApproval: (
+    organizationId: string,
+    approval: {
+      title: string;
+      description?: string;
+      type: ApprovalType;
+      steps: {
+        approverId: string;
+        order: number;
+      }[];
+    }
+  ) => void;
+  updateApproval: (approvalId: string, approval: Partial<Approval>) => void;
+  deleteApproval: (approvalId: string) => void;
 
   // View actions
   setCurrentView: (view: ViewType) => void;
-
-  // Task specific actions
-  addComment: (
-    taskId: string,
-    comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>
-  ) => void;
-  addChecklist: (taskId: string, checklist: Omit<Checklist, 'id'>) => void;
-  updateChecklistItem: (
-    taskId: string,
-    checklistId: string,
-    itemId: string,
-    isCompleted: boolean
-  ) => void;
-  addCustomField: (taskId: string, field: Omit<CustomField, 'id'>) => void;
-  updateTimeTracking: (taskId: string, timeSpent: number) => void;
-  addDependency: (taskId: string, dependencyId: string) => void;
-  addAttachment: (taskId: string, attachmentUrl: string) => void;
-
-  // Theme actions
-  updateProjectTheme: (projectId: string, theme: ProjectTheme) => void;
-
-  // View mode actions
-  toggleViewMode: (projectId: string) => void;
-
-  // Notification settings
-  updateNotificationSettings: (
-    projectId: string,
-    settings: Partial<ProjectSettings['notifications']>
-  ) => void;
 }
 
 export const useProjectStore = create<AppState>()(
   persist(
     (set): AppState => ({
-      workspaces: [],
-      currentWorkspace: null,
+      organizations: [],
+      currentOrganization: null,
       currentView: 'list',
-      currentSpace: undefined,
-      currentList: undefined,
+      currentTeam: undefined,
+      currentChat: undefined,
+      currentDocument: undefined,
       currentTask: undefined,
 
-      // Workspace actions
-      createWorkspace: (workspace, user) => {
-        const newWorkspace = {
+      // Organization actions
+      createOrganization: (organization, user) => {
+        const newOrganization: Organization = {
           id: nanoid(),
-          ...workspace,
-          spaces: [],
+          ...organization,
           members: [
             {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              role: 'admin' as const,
+              id: nanoid(),
+              role: 'OWNER',
+              joinedAt: new Date(),
+              organizationId: nanoid(),
+              userId: user.id,
             },
           ],
           createdAt: new Date(),
           updatedAt: new Date(),
+          tasks: [],
+          meetings: [],
         };
 
         set(state => ({
-          workspaces: [...state.workspaces, newWorkspace],
-          currentWorkspace: newWorkspace,
+          organizations: [...state.organizations, newOrganization],
+          currentOrganization: newOrganization,
         }));
 
-        return newWorkspace;
+        return newOrganization;
       },
-      updateWorkspace: (id, workspace) =>
+
+      updateOrganization: (id, organization) =>
         set(state => ({
-          workspaces: state.workspaces.map(w =>
-            w.id === id ? { ...w, ...workspace, updatedAt: new Date() } : w
+          organizations: state.organizations.map(o =>
+            o.id === id ? { ...o, ...organization, updatedAt: new Date() } : o
           ),
-          currentWorkspace:
-            state.currentWorkspace?.id === id
+          currentOrganization:
+            state.currentOrganization?.id === id
               ? {
-                  ...state.currentWorkspace,
-                  ...workspace,
+                  ...state.currentOrganization,
+                  ...organization,
                   updatedAt: new Date(),
                 }
-              : state.currentWorkspace,
+              : state.currentOrganization,
         })),
 
-      deleteWorkspace: id =>
+      deleteOrganization: id =>
         set(state => ({
-          workspaces: state.workspaces.filter(w => w.id !== id),
-          currentWorkspace:
-            state.currentWorkspace?.id === id ? null : state.currentWorkspace,
+          organizations: state.organizations.filter(o => o.id !== id),
+          currentOrganization:
+            state.currentOrganization?.id === id
+              ? null
+              : state.currentOrganization,
         })),
 
-      setCurrentWorkspace: id =>
+      setCurrentOrganization: id =>
         set(state => ({
-          currentWorkspace:
-            state.workspaces.find(w => w.id === id) || state.currentWorkspace,
+          currentOrganization:
+            state.organizations.find(o => o.id === id) ||
+            state.currentOrganization,
         })),
 
-      // Space actions
-      addSpace: space =>
-        set(state => {
-          if (!state.currentWorkspace) return state;
-
-          return {
-            workspaces: state.workspaces.map(w =>
-              w.id === state.currentWorkspace?.id
-                ? {
-                    ...w,
-                    spaces: [
-                      ...w.spaces,
-                      {
-                        ...space,
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                      },
-                    ],
-                  }
-                : w
-            ),
-          };
-        }),
-
-      updateSpace: (workspaceId, spaceId, space) =>
+      // Team actions
+      createTeam: (organizationId, team) =>
         set(state => ({
-          workspaces: state.workspaces.map(w =>
-            w.id === workspaceId
+          organizations: state.organizations.map(o =>
+            o.id === organizationId
               ? {
-                  ...w,
-                  spaces: w.spaces.map(s =>
-                    s.id === spaceId
-                      ? { ...s, ...space, updatedAt: new Date() }
-                      : s
-                  ),
+                  ...o,
+                  teams: [
+                    ...(o.teams || []),
+                    {
+                      ...team,
+                      id: nanoid(),
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId,
+                      members: [],
+                    } as Team,
+                  ],
                 }
-              : w
+              : o
           ),
         })),
 
-      deleteSpace: (workspaceId, spaceId) =>
+      updateTeam: (teamId, team) =>
         set(state => ({
-          workspaces: state.workspaces.map(w =>
-            w.id === workspaceId
-              ? { ...w, spaces: w.spaces.filter(s => s.id !== spaceId) }
-              : w
-          ),
-          currentSpace:
-            state.currentSpace?.id === spaceId ? undefined : state.currentSpace,
+          organizations: state.organizations.map(o => ({
+            ...o,
+            teams: o.teams?.map(t =>
+              t.id === teamId ? { ...t, ...team, updatedAt: new Date() } : t
+            ),
+          })),
         })),
 
-      setCurrentSpace: spaceId =>
+      deleteTeam: teamId =>
         set(state => ({
-          currentSpace: state.currentWorkspace?.spaces.find(
-            s => s.id === spaceId
+          organizations: state.organizations.map(o => ({
+            ...o,
+            teams: o.teams?.filter(t => t.id !== teamId) || [],
+          })),
+          currentTeam:
+            state.currentTeam?.id === teamId ? undefined : state.currentTeam,
+        })),
+
+      setCurrentTeam: teamId =>
+        set(state => ({
+          currentTeam: state.currentOrganization?.teams?.find(
+            t => t.id === teamId
           ),
         })),
 
-      // List actions
-      addList: (spaceId, list) =>
+      // Chat actions
+      createChat: (organizationId, chat) =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s =>
-              s.id === spaceId
+          organizations: state.organizations.map(o =>
+            o.id === organizationId
+              ? {
+                  ...o,
+                  chats: [
+                    ...(o.chats || []),
+                    {
+                      id: nanoid(),
+                      type: chat.type,
+                      name: chat.name,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId,
+                      messages: [],
+                      members: chat.members.map(userId => ({
+                        id: nanoid(),
+                        role: 'MEMBER',
+                        joinedAt: new Date(),
+                        lastRead: new Date(),
+                        chatId: nanoid(),
+                        userId,
+                      })) as ChatMember[],
+                    } as Chat,
+                  ],
+                }
+              : o
+          ),
+        })),
+
+      updateChat: (chatId, chat) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            chats: o.chats?.map(c =>
+              c.id === chatId ? { ...c, ...chat, updatedAt: new Date() } : c
+            ),
+          })),
+        })),
+
+      deleteChat: chatId =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            chats: o.chats?.filter(c => c.id !== chatId) || [],
+          })),
+          currentChat:
+            state.currentChat?.id === chatId ? undefined : state.currentChat,
+        })),
+
+      setCurrentChat: chatId =>
+        set(state => ({
+          currentChat: state.currentOrganization?.chats?.find(
+            c => c.id === chatId
+          ),
+        })),
+
+      sendMessage: (chatId, message) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            chats: o.chats?.map(c =>
+              c.id === chatId
                 ? {
-                    ...s,
-                    lists: [
-                      ...s.lists,
+                    ...c,
+                    messages: [
+                      ...(c.messages || []),
                       {
-                        ...list,
-                        id: crypto.randomUUID(),
-                        tasks: [],
+                        ...message,
+                        id: nanoid(),
                         createdAt: new Date(),
                         updatedAt: new Date(),
-                      },
+                      } as Message,
                     ],
                   }
-                : s
+                : c
             ),
           })),
         })),
 
-      updateList: (spaceId, listId, list) =>
+      // Document actions
+      createDocument: (organizationId, document) =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s =>
-              s.id === spaceId
-                ? {
-                    ...s,
-                    lists: s.lists.map(l =>
-                      l.id === listId
-                        ? { ...l, ...list, updatedAt: new Date() }
-                        : l
-                    ),
-                  }
-                : s
+          organizations: state.organizations.map(o =>
+            o.id === organizationId
+              ? {
+                  ...o,
+                  documents: [
+                    ...(o.documents || []),
+                    {
+                      ...document,
+                      id: nanoid(),
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId,
+                      creatorId: o.id,
+                      isTemplate: false,
+                      permissions: {
+                        public: false,
+                        roles: [],
+                        users: [],
+                      } as DocumentPermissions,
+                    } as Document,
+                  ],
+                }
+              : o
+          ),
+        })),
+
+      updateDocument: (documentId, document) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            documents: o.documents?.map(d =>
+              d.id === documentId
+                ? { ...d, ...document, updatedAt: new Date() }
+                : d
             ),
           })),
         })),
 
-      deleteList: (spaceId, listId) =>
+      deleteDocument: documentId =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s =>
-              s.id === spaceId
-                ? { ...s, lists: s.lists.filter(l => l.id !== listId) }
-                : s
-            ),
+          organizations: state.organizations.map(o => ({
+            ...o,
+            documents: o.documents?.filter(d => d.id !== documentId) || [],
           })),
-          currentList:
-            state.currentList?.id === listId ? undefined : state.currentList,
+          currentDocument:
+            state.currentDocument?.id === documentId
+              ? undefined
+              : state.currentDocument,
         })),
 
-      setCurrentList: listId =>
+      setCurrentDocument: documentId =>
         set(state => ({
-          currentList: state.currentSpace?.lists.find(l => l.id === listId),
+          currentDocument: state.currentOrganization?.documents?.find(
+            d => d.id === documentId
+          ),
         })),
 
       // Task actions
-      addTask: (listId, task) =>
+      createTask: task =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l =>
-                l.id === listId
-                  ? {
-                      ...l,
-                      tasks: [
-                        ...l.tasks,
-                        {
-                          ...task,
-                          id: crypto.randomUUID(),
-                          createdAt: new Date(),
-                          updatedAt: new Date(),
-                          settings: {
-                            theme: {
-                              primary: '#000000',
-                              background: '#ffffff',
-                              accent: '#f3f4f6',
-                            },
-                            viewMode: 'comfortable',
-                            notifications: {
-                              email: true,
-                              desktop: true,
-                              inApp: true,
-                            },
-                          },
-                        },
-                      ],
-                    }
-                  : l
-              ),
-            })),
+          organizations: state.organizations.map(o => ({
+            ...o,
+            tasks: [
+              ...(o.tasks || []),
+              {
+                ...task,
+                id: nanoid(),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'TODO' as TaskStatus,
+                priority: 'NORMAL' as Priority,
+                creatorId: o.id,
+              } as Task,
+            ],
           })),
         })),
 
-      updateTask: (listId, taskId, task) =>
+      updateTask: (taskId, task) =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l =>
-                l.id === listId
-                  ? {
-                      ...l,
-                      tasks: l.tasks.map(t =>
-                        t.id === taskId
-                          ? { ...t, ...task, updatedAt: new Date() }
-                          : t
-                      ),
-                    }
-                  : l
-              ),
-            })),
+          organizations: state.organizations.map(o => ({
+            ...o,
+            tasks: o.tasks?.map(t =>
+              t.id === taskId ? { ...t, ...task, updatedAt: new Date() } : t
+            ),
           })),
         })),
 
-      deleteTask: (listId, taskId) =>
+      deleteTask: taskId =>
         set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l =>
-                l.id === listId
-                  ? { ...l, tasks: l.tasks.filter(t => t.id !== taskId) }
-                  : l
-              ),
-            })),
+          organizations: state.organizations.map(o => ({
+            ...o,
+            tasks: o.tasks?.filter(t => t.id !== taskId) || [],
           })),
           currentTask:
             state.currentTask?.id === taskId ? undefined : state.currentTask,
@@ -508,290 +440,141 @@ export const useProjectStore = create<AppState>()(
 
       setCurrentTask: taskId =>
         set(state => ({
-          currentTask: state.currentList?.tasks.find(t => t.id === taskId),
+          currentTask: state.currentOrganization?.tasks?.find(
+            t => t.id === taskId
+          ),
         })),
 
-      moveTask: (taskId, sourceListId, targetListId) =>
-        set(state => {
-          let taskToMove: Task | undefined;
-          const newWorkspaces = state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => {
-                if (l.id === sourceListId) {
-                  const task = l.tasks.find(t => t.id === taskId);
-                  if (task) taskToMove = task;
-                  return { ...l, tasks: l.tasks.filter(t => t.id !== taskId) };
+      // Event actions
+      createEvent: (organizationId, event) =>
+        set(state => ({
+          organizations: state.organizations.map(o =>
+            o.id === organizationId
+              ? {
+                  ...o,
+                  events: [
+                    ...(o.events || []),
+                    {
+                      ...event,
+                      id: nanoid(),
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId,
+                      isAllDay: false,
+                      creatorId: o.id,
+                    } as Event,
+                  ],
                 }
-                if (l.id === targetListId && taskToMove) {
-                  return {
-                    ...l,
-                    tasks: [
-                      ...l.tasks,
-                      { ...taskToMove, updatedAt: new Date() },
-                    ],
-                  };
+              : o
+          ),
+        })),
+
+      updateEvent: (eventId, event) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            events: o.events?.map(e =>
+              e.id === eventId ? { ...e, ...event, updatedAt: new Date() } : e
+            ),
+          })),
+        })),
+
+      deleteEvent: eventId =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            events: o.events?.filter(e => e.id !== eventId) || [],
+          })),
+        })),
+
+      // Meeting actions
+      createMeeting: meeting =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            meetings: [
+              ...(o.meetings || []),
+              {
+                ...meeting,
+                id: nanoid(),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                organizerId: o.id,
+              } as Meeting,
+            ],
+          })),
+        })),
+
+      updateMeeting: (meetingId, meeting) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            meetings: o.meetings?.map(m =>
+              m.id === meetingId
+                ? { ...m, ...meeting, updatedAt: new Date() }
+                : m
+            ),
+          })),
+        })),
+
+      deleteMeeting: meetingId =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            meetings: o.meetings?.filter(m => m.id !== meetingId) || [],
+          })),
+        })),
+
+      // Approval actions
+      createApproval: (organizationId, approval) =>
+        set(state => ({
+          organizations: state.organizations.map(o =>
+            o.id === organizationId
+              ? {
+                  ...o,
+                  approvals: [
+                    ...(o.approvals || []),
+                    {
+                      ...approval,
+                      id: nanoid(),
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      organizationId: o.id,
+                      status: 'PENDING',
+                      creatorId: o.id,
+                    } as Approval,
+                  ],
                 }
-                return l;
-              }),
-            })),
-          }));
-          return { workspaces: newWorkspaces };
-        }),
+              : o
+          ),
+        })),
+
+      updateApproval: (approvalId, approval) =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            approvals: o.approvals?.map(a =>
+              a.id === approvalId
+                ? { ...a, ...approval, updatedAt: new Date() }
+                : a
+            ),
+          })),
+        })),
+
+      deleteApproval: approvalId =>
+        set(state => ({
+          organizations: state.organizations.map(o => ({
+            ...o,
+            approvals: o.approvals?.filter(a => a.id !== approvalId) || [],
+          })),
+        })),
 
       // View actions
       setCurrentView: view => set({ currentView: view }),
-
-      // Task specific actions
-      addComment: (taskId, comment) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        comments: [
-                          ...(t.comments || []),
-                          {
-                            ...comment,
-                            id: crypto.randomUUID(),
-                            createdAt: new Date(),
-                            updatedAt: new Date(),
-                          },
-                        ],
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      addChecklist: (taskId, checklist) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        checklists: [
-                          ...(t.checklists || []),
-                          { ...checklist, id: crypto.randomUUID() },
-                        ],
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      updateChecklistItem: (taskId, checklistId, itemId, isCompleted) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        checklists: t.checklists.map(c =>
-                          c.id === checklistId
-                            ? {
-                                ...c,
-                                items: c.items.map(i =>
-                                  i.id === itemId ? { ...i, isCompleted } : i
-                                ),
-                              }
-                            : c
-                        ),
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      addCustomField: (taskId, field) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        customFields: [
-                          ...(t.customFields || []),
-                          { ...field, id: crypto.randomUUID() },
-                        ],
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      updateTimeTracking: (taskId, timeSpent) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId ? { ...t, timeSpent } : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      addDependency: (taskId, dependencyId) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        dependencies: [...(t.dependencies || []), dependencyId],
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      addAttachment: (taskId, attachmentUrl) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === taskId
-                    ? {
-                        ...t,
-                        attachments: [...(t.attachments || []), attachmentUrl],
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      // Theme actions
-      updateProjectTheme: (projectId, theme) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === projectId
-                    ? {
-                        ...t,
-                        settings: {
-                          ...t.settings,
-                          theme,
-                        },
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      // View mode actions
-      toggleViewMode: projectId =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === projectId
-                    ? {
-                        ...t,
-                        settings: {
-                          ...t.settings,
-                          viewMode:
-                            t.settings.viewMode === 'compact'
-                              ? 'comfortable'
-                              : 'compact',
-                        },
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
-
-      // Notification settings
-      updateNotificationSettings: (projectId, settings) =>
-        set(state => ({
-          workspaces: state.workspaces.map(w => ({
-            ...w,
-            spaces: w.spaces.map(s => ({
-              ...s,
-              lists: s.lists.map(l => ({
-                ...l,
-                tasks: l.tasks.map(t =>
-                  t.id === projectId
-                    ? {
-                        ...t,
-                        settings: {
-                          ...t.settings,
-                          notifications: {
-                            ...t.settings.notifications,
-                            ...settings,
-                          },
-                        },
-                      }
-                    : t
-                ),
-              })),
-            })),
-          })),
-        })),
     }),
     {
       name: 'project-storage',
+      version: 1,
     }
   )
 );

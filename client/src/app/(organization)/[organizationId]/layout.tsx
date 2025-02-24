@@ -11,9 +11,9 @@ import {
   SidebarProvider,
 
 } from '@/components/ui/sidebar';
+import { OrganizationHeader, OrganizationSidebar } from '@/components';
 
-import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
-import { WorkspaceSidebar } from '@/components';
+
 
 
 
@@ -22,20 +22,20 @@ export default function WorkspaceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { workspaceId } = useParams();
-  const { setCurrentWorkspace } = useProjectStore();
+  const { organizationId } = useParams();
+  const { setCurrentOrganization } = useProjectStore();
 
   React.useEffect(() => {
-    if (workspaceId) {
-      setCurrentWorkspace(workspaceId as string);
+    if (organizationId) {
+      setCurrentOrganization(organizationId as string);
     }
-  }, [workspaceId, setCurrentWorkspace]);
+  }, [organizationId, setCurrentOrganization]);
 
   return (
     <SidebarProvider>
-      <WorkspaceSidebar />
+      <OrganizationSidebar />
       <SidebarInset>
-        <WorkspaceHeader/>
+        <OrganizationHeader/>
         <main className='flex-1 overflow-auto relative'>{children}</main>
       </SidebarInset>
     </SidebarProvider>

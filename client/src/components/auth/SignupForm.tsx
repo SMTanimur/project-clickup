@@ -17,12 +17,14 @@ import { useUserStore } from '@/lib/store/user-store';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
-import { WorkspaceDialog } from '../workspace/WorkspaceDialog';
-import { Workspace } from '@/lib/store/project-store';
+
+import { Organization } from '@/types';
+import { OrganizationDialog } from '../organizations';
 
 const signupSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
+    displayName: z.string().optional(),
     email: z.string().email('Invalid email address'),
     password: z
       .string()
@@ -32,6 +34,9 @@ const signupSchema = z
         'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       ),
     confirmPassword: z.string(),
+    phoneNumber: z.string().optional(),
+    timezone: z.string().optional(),
+    language: z.string().optional(),
   })
   .refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -41,7 +46,7 @@ const signupSchema = z
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
-  const [showWorkspaceDialog, setShowWorkspaceDialog] = useState(false);
+  const [showOrganizationDialog, setShowOrganizationDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signup } = useUserStore();
   const router = useRouter();
@@ -50,9 +55,13 @@ export function SignupForm() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       name: '',
+      displayName: '',
       email: '',
       password: '',
       confirmPassword: '',
+      phoneNumber: '',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language.split('-')[0],
     },
   });
 
@@ -60,17 +69,25 @@ export function SignupForm() {
     try {
       await signup({
         name: data.name,
+        displayName: data.displayName,
         email: data.email,
         password: data.password,
+        phoneNumber: data.phoneNumber,
+        timezone: data.timezone,
+        language: data.language,
       });
-      setShowWorkspaceDialog(true);
-    } catch (error) {
-      setError('Failed to create account. Please try again.');
+      setShowOrganizationDialog(true);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to create account. Please try again.');
+      }
     }
   };
 
-  const handleWorkspaceCreated = (workspace: Workspace) => {
-    router.push(`/${workspace.id}`);
+  const handleOrganizationCreated = (organization: Organization) => {
+    router.push(`/${organization.id}`);
   };
 
   return (
@@ -82,9 +99,23 @@ export function SignupForm() {
             name='name'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter your name' {...field} />
+                  <Input placeholder='Enter your full name' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='displayName'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder='Enter your display name' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -101,6 +132,24 @@ export function SignupForm() {
                   <Input
                     type='email'
                     placeholder='Enter your email'
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='phoneNumber'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='tel'
+                    placeholder='Enter your phone number'
                     {...field}
                   />
                 </FormControl>
@@ -162,10 +211,10 @@ export function SignupForm() {
         </form>
       </Form>
 
-      <WorkspaceDialog
-        open={showWorkspaceDialog}
-        onOpenChange={setShowWorkspaceDialog}
-        onComplete={handleWorkspaceCreated}
+      <OrganizationDialog
+        open={showOrganizationDialog}
+        onOpenChange={setShowOrganizationDialog}
+        onComplete={handleOrganizationCreated}
       />
     </>
   );
