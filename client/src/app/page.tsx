@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function LandingPage() {
   return (
     <div className='min-h-screen bg-gradient-to-b from-background to-accent'>
-      <div className='container mx-auto px-4 py-16'>
+      <div className=' mx-auto px-4 py-16'>
         <div className='text-center space-y-6'>
           <h1 className='text-6xl font-bold tracking-tighter'>
             Project Management, <span className='text-primary'>Reimagined</span>

@@ -4,7 +4,13 @@ import { useProjectStore } from '@/lib/store/project-store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import {
+  RainbowButton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui';
 import { Search, Plus, Users, Calendar, Settings } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -31,14 +37,14 @@ export default function OrganizationsPage() {
   );
 
   return (
-    <div className='p-6 max-w-6xl mx-auto'>
+    <div className='p-6  mx-auto'>
       <div className='flex items-center justify-between mb-8'>
         <h1 className='text-3xl font-bold'>Organizations</h1>
         <Link href='/organizations/new'>
-          <Button>
+          <RainbowButton className='text-primary'>
             <Plus className='h-4 w-4 mr-2' />
             New Organization
-          </Button>
+          </RainbowButton>
         </Link>
       </div>
 
