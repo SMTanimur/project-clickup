@@ -15,10 +15,13 @@ import { Search, Plus, Users, Calendar, Settings } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Organization } from '@/types';
+import { OrganizationDialog } from '@/components';
 
 export default function OrganizationsPage() {
   const { organizations } = useProjectStore();
   const [search, setSearch] = useState('');
+
+  const [open, setOpen] = useState(false);
 
   const myOrganizations =
     organizations.filter(o =>
@@ -38,14 +41,14 @@ export default function OrganizationsPage() {
 
   return (
     <div className='p-6  mx-auto'>
+      <OrganizationDialog open={open} onOpenChange={setOpen} />
       <div className='flex items-center justify-between mb-8'>
         <h1 className='text-3xl font-bold'>Organizations</h1>
-        <Link href='/organizations/new'>
-          <RainbowButton className='text-primary'>
-            <Plus className='h-4 w-4 mr-2' />
-            New Organization
-          </RainbowButton>
-        </Link>
+
+        <RainbowButton className='text-primary' onClick={() => setOpen(true)}>
+          <Plus className='h-4 w-4 mr-2' />
+          New Organization
+        </RainbowButton>
       </div>
 
       <div className='mb-6'>
