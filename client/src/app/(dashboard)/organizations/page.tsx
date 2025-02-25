@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   RainbowButton,
+  SparklesText,
   Tabs,
   TabsContent,
   TabsList,
@@ -43,7 +44,9 @@ export default function OrganizationsPage() {
     <div className='p-6  mx-auto'>
       <OrganizationDialog open={open} onOpenChange={setOpen} />
       <div className='flex items-center justify-between mb-8'>
-        <h1 className='text-3xl font-bold'>Organizations</h1>
+        <SparklesText text='Organizations' className='text-3xl' />
+      
+        
 
         <RainbowButton className='text-primary' onClick={() => setOpen(true)}>
           <Plus className='h-4 w-4 mr-2' />
