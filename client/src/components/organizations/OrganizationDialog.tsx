@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useProjectStore } from '@/lib/store/project-store';
 import { useUserStore } from '@/lib/store/user-store';
-import { Organization } from '@/types';
+
 
 const formSchema = z.object({
   name: z.string().min(1, 'Organization name is required'),
@@ -37,13 +37,13 @@ type FormData = z.infer<typeof formSchema>;
 interface OrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onComplete: (organization: Organization) => void;
+
 }
 
 export function OrganizationDialog({
   open,
   onOpenChange,
-  onComplete,
+
 }: OrganizationDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const { createOrganization } = useProjectStore();
@@ -64,8 +64,9 @@ export function OrganizationDialog({
         throw new Error('No user logged in');
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const organization = createOrganization(data, currentUser);
-      onComplete(organization);
+
       onOpenChange(false);
       form.reset();
     } catch (err) {
