@@ -14,11 +14,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useUserStore } from '@/lib/store/user-store';
-import { useRouter } from 'next/navigation';
+
 import { useState } from 'react';
 import Link from 'next/link';
 
-import { Organization } from '@/types';
 import { OrganizationDialog } from '../organizations';
 
 const signupSchema = z
@@ -49,7 +48,6 @@ export function SignupForm() {
   const [showOrganizationDialog, setShowOrganizationDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signup } = useUserStore();
-  const router = useRouter();
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -86,9 +84,7 @@ export function SignupForm() {
     }
   };
 
-  const handleOrganizationCreated = (organization: Organization) => {
-    router.push(`/${organization.id}`);
-  };
+
 
   return (
     <>
@@ -214,7 +210,7 @@ export function SignupForm() {
       <OrganizationDialog
         open={showOrganizationDialog}
         onOpenChange={setShowOrganizationDialog}
-        onComplete={handleOrganizationCreated}
+
       />
     </>
   );

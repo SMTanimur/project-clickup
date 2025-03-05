@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   RainbowButton,
+  SparklesText,
   Tabs,
   TabsContent,
   TabsList,
@@ -43,9 +44,11 @@ export default function OrganizationsPage() {
     <div className='p-6  mx-auto'>
       <OrganizationDialog open={open} onOpenChange={setOpen} />
       <div className='flex items-center justify-between mb-8'>
-        <h1 className='text-3xl font-bold'>Organizations</h1>
+        <SparklesText text='Organizations' className='text-3xl' />
+      
+        
 
-        <RainbowButton className='text-primary' onClick={() => setOpen(true)}>
+        <RainbowButton className=' text-primary' onClick={() => setOpen(true)}>
           <Plus className='h-4 w-4 mr-2' />
           New Organization
         </RainbowButton>
@@ -105,8 +108,8 @@ interface OrganizationCardProps {
 
 function OrganizationCard({ organization }: OrganizationCardProps) {
   return (
-    <Card className='p-4 hover:shadow-md transition-shadow'>
-      <div className='flex items-start justify-between mb-4'>
+    <Card className='p-4  hover:shadow-md transition-shadow  '>
+      <div className='flex  items-start justify-between mb-4'>
         <div className='flex items-center gap-3'>
           <div className='w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-lg font-semibold'>
             {organization.name[0].toUpperCase()}

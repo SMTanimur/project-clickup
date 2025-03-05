@@ -12,7 +12,5 @@ services:
       - NODE_ENV=production
     networks:
       - app-network
-
-networks:
-  app-network:
-    driver: bridge
+    depends_on:
+      - api
